@@ -326,6 +326,7 @@ function TurnoResult({
   }
 
   return (
+    <>
     <motion.div
       className="text-center"
       variants={containerVariants}
@@ -494,11 +495,52 @@ function TurnoResult({
               </div>
             </motion.div>
           </div>
+        </>
+      )}
+    </motion.div>
 
-          <motion.div
-            className="mx-auto mt-5 max-w-xs"
+      {!isExpired && (
+        <motion.div
+          className="mx-auto mt-4 max-w-xs"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.button
+            type="button"
+            onClick={handleJoinZoom}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-utpl-blue/20 bg-white px-5 py-3 text-sm font-bold text-utpl-blue shadow-lg transition-all hover:bg-utpl-blue hover:text-white focus-visible:ring-2 focus-visible:ring-utpl-blue focus-visible:ring-offset-2"
             variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
+            <Video className="h-4 w-4" />
+            Unirse a Zoom
+          </motion.button>
+          {!isMobile && (
+            <p className="mt-2 text-center text-[10px] text-slate-400">
+              o{' '}
+              <a
+                href={webZoomLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline transition-colors hover:text-utpl-blue focus-visible:ring-2 focus-visible:ring-utpl-blue focus-visible:ring-offset-2 focus-visible:outline-none"
+              >
+                abrir en navegador
+              </a>
+            </p>
+          )}
+        </motion.div>
+      )}
+
+      {!isExpired && (
+        <motion.div
+          className="mx-auto mt-5 max-w-xs"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={itemVariants}>
             <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-left">
               <Video className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
               <p className="text-justify text-xs leading-relaxed text-amber-800">
@@ -520,38 +562,8 @@ function TurnoResult({
               </p>
             </div>
           </motion.div>
-
-          <motion.div
-            className="mx-auto mt-4 max-w-xs"
-            variants={itemVariants}
-          >
-            <motion.button
-              type="button"
-              onClick={handleJoinZoom}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-utpl-blue/20 bg-white px-5 py-3 text-sm font-bold text-utpl-blue shadow-lg transition-all hover:bg-utpl-blue hover:text-white focus-visible:ring-2 focus-visible:ring-utpl-blue focus-visible:ring-offset-2"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Video className="h-4 w-4" />
-              Unirse a Zoom
-            </motion.button>
-            {!isMobile && (
-              <p className="mt-2 text-[10px] text-slate-400">
-                o{' '}
-                <a
-                  href={webZoomLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline transition-colors hover:text-utpl-blue focus-visible:ring-2 focus-visible:ring-utpl-blue focus-visible:ring-offset-2 focus-visible:outline-none"
-                >
-                  abrir en navegador
-                </a>
-              </p>
-            )}
-          </motion.div>
-        </>
+        </motion.div>
       )}
-    </motion.div>
+    </>
   );
 }

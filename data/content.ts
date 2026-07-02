@@ -19,6 +19,7 @@ export const c = {
       ariaLabel: 'Progreso del formulario',
     },
     tipo: {
+      subtitle: 'Selecciona el servicio que mejor se adapte a tu requerimiento.',
       estudiante: {
         heading: 'Soy UTPL+',
         description: 'Accede a nuestros servicios académicos, administrativos y más....',

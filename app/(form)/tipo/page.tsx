@@ -82,12 +82,12 @@ function TipoContent() {
         <p className="font-display text-xl font-bold text-utpl-navy sm:text-2xl">
           {c.layout.welcome.heading}
         </p>
+        <p className="mt-2 text-sm text-utpl-muted sm:text-base">
+          {c.steps.tipo.subtitle}
+        </p>
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.15em] text-utpl-muted">
-          Selecciona tu tipo de usuario
-        </p>
         <FormStepIndicator className="mb-6" />
         <StepUserType onSelect={handleSelectUserType} />
       </motion.div>
