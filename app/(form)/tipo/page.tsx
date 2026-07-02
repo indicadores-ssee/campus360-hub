@@ -4,12 +4,10 @@ import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
-import AnnouncementCarousel from '@/components/AnnouncementCarousel';
 import FormStepIndicator from '@/components/FormStepIndicator';
 import StepUserType from '@/components/wizard/StepUserType';
 import { useFormContext } from '@/contexts/FormContext';
 import { c } from '@/data/content';
-import { useBannerAnnouncements } from '@/hooks/use-banner-announcements';
 import { buildRoute } from '@/lib/navigation-utilities';
 
 const containerVariants = {
@@ -58,7 +56,6 @@ function TipoContent() {
   const router = useRouter();
   const searchParameters = useSearchParams();
   const { setUserType, validateCurrentStep, dispatch, errors } = useFormContext();
-  const { messages, rotationIntervalMs, isLoading } = useBannerAnnouncements();
 
   const handleSelectUserType = (type: 'estudiante' | 'aspirante') => {
     setUserType(type);
@@ -86,18 +83,6 @@ function TipoContent() {
           {c.layout.welcome.heading}
         </p>
       </motion.div>
-
-      {!isLoading && messages.length > 0 && (
-        <motion.div
-          variants={itemVariants}
-          className="mb-5"
-        >
-          <AnnouncementCarousel
-            messages={messages}
-            rotationIntervalMs={rotationIntervalMs}
-          />
-        </motion.div>
-      )}
 
       <motion.div variants={itemVariants}>
         <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.15em] text-utpl-muted">

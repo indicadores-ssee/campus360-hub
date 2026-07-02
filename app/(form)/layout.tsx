@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect } from 'react';
 
+import AnnouncementCarousel from '@/components/AnnouncementCarousel';
 import BusinessHoursWatcher from '@/components/BusinessHoursWatcher';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import MobileWarningModal from '@/components/MobileWarningModal';
@@ -14,6 +15,7 @@ import ContactTimeModal from '@/components/wizard/ContactTimeModal';
 import GuideModal from '@/components/wizard/GuideModal';
 import { FormProvider, useFormContext } from '@/contexts/FormContext';
 import { c } from '@/data/content';
+import { useBannerAnnouncements } from '@/hooks/use-banner-announcements';
 import { buildRoute } from '@/lib/navigation-utilities';
 
 const ROUTE_TO_STEP: Record<string, number> = {
@@ -49,6 +51,8 @@ function FormShell({ children }: { children: React.ReactNode }) {
   }, [pathname, data.step, setStep]);
 
   const isTipoPage = pathname.endsWith('/tipo');
+  const isResultadoPage = pathname.endsWith('/resultado');
+  const { messages, rotationIntervalMs, isLoading } = useBannerAnnouncements();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -107,6 +111,14 @@ function FormShell({ children }: { children: React.ReactNode }) {
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="rounded-xl bg-white px-6 py-7 sm:px-8">
+              {!isResultadoPage && !isLoading && messages.length > 0 && (
+                <div className="mb-6">
+                  <AnnouncementCarousel
+                    messages={messages}
+                    rotationIntervalMs={rotationIntervalMs}
+                  />
+                </div>
+              )}
               {!isTipoPage && (
                 <div className="mb-8">
                   <FormStepIndicator />
