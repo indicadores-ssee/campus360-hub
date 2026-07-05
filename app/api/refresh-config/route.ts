@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 
+import { checkRateLimit, getClientIp } from '@/lib/server/api-utilities';
 import { verifyRefreshSecret } from '@/lib/server/refresh-auth';
 import { upsertScheduleFromPayload } from '@/lib/server/schedule-service';
 
 export async function POST(request: Request) {
+  if (!checkRateLimit(getClientIp(request))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   if (!verifyRefreshSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

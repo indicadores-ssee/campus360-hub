@@ -6,7 +6,7 @@ import type { BannerAnnouncement } from '@/types/banner';
 
 export function useBannerAnnouncements() {
   const [messages, setMessages] = useState<BannerAnnouncement[]>([]);
-  const [rotationIntervalMs, setRotationIntervalMs] = useState(20_000);
+  const [rotationIntervalMs, setRotationIntervalMs] = useState(15_000);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

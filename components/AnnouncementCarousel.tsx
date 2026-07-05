@@ -12,7 +12,7 @@ interface AnnouncementCarouselProperties {
 
 export default function AnnouncementCarousel({
   messages,
-  rotationIntervalMs = 20_000,
+  rotationIntervalMs = 15_000,
 }: AnnouncementCarouselProperties) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);

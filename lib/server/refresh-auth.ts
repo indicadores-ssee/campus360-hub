@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto';
+
 export function verifyRefreshSecret(request: Request): boolean {
   const secret = process.env.REFRESH_SECRET?.trim();
   if (!secret) return false;
@@ -6,5 +8,10 @@ export function verifyRefreshSecret(request: Request): boolean {
   if (!auth?.startsWith('Bearer ')) return false;
 
   const token = auth.slice('Bearer '.length).trim();
-  return token === secret;
+
+  const tokenBuffer = Buffer.from(token);
+  const secretBuffer = Buffer.from(secret);
+  if (tokenBuffer.length !== secretBuffer.length) return false;
+
+  return timingSafeEqual(tokenBuffer, secretBuffer);
 }

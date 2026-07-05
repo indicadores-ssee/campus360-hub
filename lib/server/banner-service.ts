@@ -3,7 +3,7 @@ import { readBannersFromKv, writeBannersToKv } from '@/lib/server/banner-kv';
 import type { BannerAnnouncement } from '@/types/banner';
 
 const PA_TIMEOUT_MS = 15_000;
-export const BANNER_ROTATION_INTERVAL_MS = 20_000;
+export const BANNER_ROTATION_INTERVAL_MS = 15_000;
 
 async function fetchBannersFromPowerAutomate(): Promise<BannerAnnouncement[]> {
   const url = process.env.MICROSOFT_AVISOS_FLOW_URL?.trim();
