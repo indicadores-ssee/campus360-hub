@@ -1,10 +1,6 @@
 import { normalizeTime } from '@/lib/schedule-core';
 import type { HorarioRow, ScheduleMode } from '@/types/schedule';
-import {
-  TITULO_HORARIO_EXTENDIDO,
-  TITULO_HORARIO_EXTENDIDO_FIN_SEMANA,
-  TITULO_HORARIO_NORMAL,
-} from '@/types/schedule';
+import { TITULO_HORARIO_EXTENDIDO, TITULO_HORARIO_NORMAL } from '@/types/schedule';
 
 type SharePointChoiceField = {
   Value?: string;
@@ -77,7 +73,6 @@ function normalizeTitulo(raw: string): string {
   const trimmed = raw.trim();
   const lower = trimmed.toLowerCase();
 
-  if (lower.includes('fin de semana')) return TITULO_HORARIO_EXTENDIDO_FIN_SEMANA;
   if (lower.includes('extendido')) return TITULO_HORARIO_EXTENDIDO;
   if (lower.includes('normal')) return TITULO_HORARIO_NORMAL;
 

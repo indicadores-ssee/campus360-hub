@@ -12,11 +12,7 @@ import {
 } from '@/lib/schedule-core';
 import { mapSharePointSchedulePayload } from '@/lib/server/schedule-mapper';
 import { isScheduleKvEnabled, readScheduleFromKv, writeScheduleToKv } from '@/lib/server/schedule-kv';
-import {
-  TITULO_HORARIO_EXTENDIDO,
-  TITULO_HORARIO_EXTENDIDO_FIN_SEMANA,
-  TITULO_HORARIO_NORMAL,
-} from '@/types/schedule';
+import { TITULO_HORARIO_EXTENDIDO, TITULO_HORARIO_NORMAL } from '@/types/schedule';
 import type { BusinessHoursState, HorarioRow, ResolvedSchedule, ScheduleStore } from '@/types/schedule';
 
 export type ScheduleStoreSource = 'kv' | 'empty' | 'mock';
@@ -70,7 +66,6 @@ export async function getCurrentBusinessHoursState(): Promise<BusinessHoursState
 
 function normalizeTituloHint(tituloHint: string): string {
   const lower = tituloHint.toLowerCase();
-  if (lower.includes('fin de semana')) return TITULO_HORARIO_EXTENDIDO_FIN_SEMANA;
   if (lower.includes('extendido')) return TITULO_HORARIO_EXTENDIDO;
   if (lower.includes('normal')) return TITULO_HORARIO_NORMAL;
   return tituloHint;

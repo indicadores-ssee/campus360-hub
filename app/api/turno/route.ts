@@ -13,6 +13,8 @@ import { getNextTurnoNumber } from '@/lib/server/turno-counter';
 import { enqueueTurno } from '@/lib/server/turno-queue';
 import { WEBHOOK_URLS } from '@/lib/server/power-automate';
 import { generateZoomLink, generateWebZoomLink } from '@/lib/server/zoom';
+import { canAcceptTurnosFromState } from '@/lib/schedule-core';
+import { getCurrentBusinessHoursState } from '@/lib/server/schedule-service';
 
 function todayDateOnly(): string {
   const d = new Date();
@@ -101,6 +103,14 @@ export async function PUT(request: Request) {
 
     if (action !== 'asignar') {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    }
+
+    const businessHoursState = await getCurrentBusinessHoursState();
+    if (!canAcceptTurnosFromState(businessHoursState)) {
+      return NextResponse.json(
+        { error: 'Fuera de horario de atención (hora Ecuador). No se pueden asignar turnos.' },
+        { status: 403 }
+      );
     }
 
     const errors: string[] = [
