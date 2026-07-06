@@ -9,17 +9,16 @@ Plataforma web de atención y gestión de turnos para la **Universidad Técnica 
 - [Características principales](#características-principales)
 - [Stack tecnológico](#stack-tecnológico)
 - [Requisitos previos](#requisitos-previos)
+- [Documentación técnica](#documentación-técnica)
 - [Primeros pasos](#primeros-pasos)
-- [Arquitectura](#arquitectura)
 - [Variables de entorno](#variables-de-entorno)
+- [Arquitectura](#arquitectura)
 - [Scripts disponibles](#scripts-disponibles)
 - [API REST](#api-rest)
 - [Pruebas y calidad de código](#pruebas-y-calidad-de-código)
 - [Despliegue](#despliegue)
 - [Solución de problemas](#solución-de-problemas)
 - [Contribuir](#contribuir)
-
----
 
 ## Características principales
 
@@ -32,124 +31,54 @@ Plataforma web de atención y gestión de turnos para la **Universidad Técnica 
 - **Rate limiting** en APIs (30 peticiones/minuto por IP) y sanitización de inputs.
 - **Diseño institucional UTPL** con Tailwind CSS, animaciones Framer Motion y advertencia en dispositivos móviles.
 
----
-
 ## Stack tecnológico
 
 | Capa | Tecnología |
 |------|------------|
 | **Lenguaje** | TypeScript 5 |
-| **Framework** | [Next.js](https://nextjs.org) 16.2 (App Router) |
+| **Framework** | [Next.js](https://nextjs.org) 16 (App Router) |
 | **UI** | React 19, Tailwind CSS 4, Framer Motion 12 |
 | **Iconos** | Lucide React |
 | **Banderas** | react-world-flags |
-| **Base de datos** | Neon PostgreSQL |
-| **Autenticación** | NextAuth.js |
-| **Backend / datos** | Route Handlers de Next.js + Prisma ORM |
-| **Integraciones** | Microsoft Power Automate (turnos, notificaciones, autogestión) |
+| **Datos / caché** | [Upstash Redis](https://upstash.com/docs/redis) |
+| **Cola asíncrona** | [Upstash QStash](https://upstash.com/docs/qstash) |
+| **Backend** | Route Handlers de Next.js |
+| **Integraciones** | Microsoft Power Automate (turnos, notificaciones, autogestión, horarios) |
 | **Videollamadas** | Zoom (enlaces deep link y web) |
-| **Gestor de paquetes** | pnpm |
+| **Gestor de paquetes** | pnpm 9+ |
 | **Linting / formato** | ESLint 9, Prettier 3 |
 | **Despliegue recomendado** | Vercel (plataforma nativa para Next.js) |
 
----
-
-## Base de datos servicios UTPL portal servicios
-
-### Relaciones (cardinalidad)
-
-- `StudentType` 1:N `ServiceCategory`
-- `ServiceCategory` 1:N `Service`
-- `Service` 1:N `ServiceRequirement`
-- `Service` 1:N `ServiceRequirementTab`
-- `ServiceRequirementTab` 1:N `ServiceRequirementItem`
-- `Service` 1:N `ServicePeriod`
-- `ServicePeriod` 1:N `ServicePeriodModality`
-- `Service` 1:N `ServiceGuide`
-- `Service` 1:N `ServiceExtraField`
-
-### Tablas y campos
-
-**Tabla `StudentType`**
-- `id`: integer, PK, autoincrement
-- `code`: string, unique
-- `name`: string
-- `description`: string, nullable
-- `sortOrder`: integer
-- `isActive`: boolean
-- `createdAt`: datetime
-- `updatedAt`: datetime
-
-**Tabla `ServiceCategory`**
-- `id`: integer, PK, autoincrement
-- `studentTypeId`: integer, FK -> `StudentType.id`
-- `slug`: string
-- `name`: string
-- `description`: string, nullable
-- `sortOrder`: integer
-- `isActive`: boolean
-- `createdAt`: datetime
-- `updatedAt`: datetime
-
-**Tabla `Service`**
-- `id`: integer, PK, autoincrement
-- `categoryId`: integer, FK -> `ServiceCategory.id`
-- `sourceKey`: string, unique
-- `title`: string
-- `slug`: string
-- `description`: string, nullable
-- `status`: enum (`draft`, `published`, `needs_review`)
-- `createdAt`: datetime
-- `updatedAt`: datetime
-
-**Tabla `ServiceRequirement`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `text`: string
-- `sortOrder`: integer
-
-**Tabla `ServiceRequirementTab`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `tabName`: string
-- `title`: string, nullable
-- `sortOrder`: integer
-
-**Tabla `ServicePeriod`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `name`: string
-- `sortOrder`: integer
-
-**Tabla `ServicePeriodModality`**
-- `id`: integer, PK, autoincrement
-- `periodId`: integer, FK -> `ServicePeriod.id`
-- `modality`: string
-- `requestWindow`: string, nullable
-- `responseWindow`: string, nullable
-- `enabledFrom`: date, nullable
-- `enabledTo`: date, nullable
-- `sortOrder`: integer
-
-**Tabla `ServiceGuide`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `label`: string
-- `url`: string
-- `sortOrder`: integer
-
----
+Detalle ampliado: [docs/stack.md](docs/stack.md).
 
 ## Requisitos previos
 
-- **Node.js** 20 o superior
+- **Node.js** 22.x (ver `engines` en `package.json`)
 - **pnpm** 9+ (recomendado; el proyecto usa `pnpm-lock.yaml`)
-- Una cuenta de **Neon PostgreSQL** (o PostgreSQL compatible)
-- (Opcional) ID de reunión **Zoom** para atención virtual
+- Cuenta **Upstash Redis** (o Vercel KV) y flujos **Power Automate** configurados
+- (Opcional) ID de reunión **Zoom** y token **QStash** para producción
 
----
+Detalle ampliado: [docs/prerequisites.md](docs/prerequisites.md).
+
+## Documentación técnica
+
+| Documento | Contenido |
+|-----------|-----------|
+| [docs/informe-tecnico-canal-virtual.md](docs/informe-tecnico-canal-virtual.md) | **Informe institucional** — plataforma, alojamiento, datos (respaldo URL) |
+| [docs/stack.md](docs/stack.md) | Stack, arquitectura de datos y tecnologías retiradas |
+| [docs/prerequisites.md](docs/prerequisites.md) | Node, pnpm, cuentas externas y variables de entorno |
+| [docs/getting-started.md](docs/getting-started.md) | Guía de instalación paso a paso |
+| [docs/architecture.md](docs/architecture.md) | Estructura del proyecto y flujos |
+| [docs/deployment.md](docs/deployment.md) | Despliegue en Vercel y checklist de producción |
+| [docs/api/](docs/api/README.md) | Referencia de endpoints REST |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Guía ampliada de solución de problemas |
+| [docs/archive/db-schema.md](docs/archive/db-schema.md) | Esquema histórico Prisma/PostgreSQL (archivado) |
+
+Índice completo: [docs/tech-index.md](docs/tech-index.md).
 
 ## Primeros pasos
+
+Guía extendida: [docs/getting-started.md](docs/getting-started.md).
 
 ### 1. Clonar el repositorio
 
@@ -166,55 +95,13 @@ pnpm install
 
 ### 3. Configurar variables de entorno
 
-Crea un archivo `.env.local` en la raíz del proyecto:
-
 ```bash
 cp .env.example .env.local
 ```
 
-Variables necesarias:
+Completa los valores en `.env.local`. Referencia completa en [Variables de entorno](#variables-de-entorno).
 
-```env
-# Base de datos PostgreSQL
-DATABASE_URL=postgresql://user:password@host:5432/campus360
-
-# Power Automate webhooks
-PA_CREAR_TURNO_URL=https://prod-xxx.logic.azure.com:443/...
-PA_CREAR_AUTOGESTION_URL=https://prod-xxx.logic.azure.com:443/...
-PA_CREAR_FUERA_HORARIO_URL=https://prod-xxx.logic.azure.com:443/...
-
-# Banner / avisos (SharePoint vía Power Automate)
-MICROSOFT_AVISOS_FLOW_URL=https://prod-xxx.logic.azure.com:443/...
-
-# Categorías del wizard (SharePoint vía Power Automate, lectura fallback)
-MICROSOFT_CATEGORIAS_FLOW_URL=https://prod-xxx.logic.azure.com:443/...
-
-# Secret compartido para POST refresh (banner, categorías y horarios)
-REFRESH_SECRET=your_long_random_secret
-
-# Upstash Redis (turnos + caché de avisos y categorías)
-UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
-UPSTASH_REDIS_REST_TOKEN=xxx
-
-# Zoom
-NEXT_PUBLIC_ZOOM_MEETING_ID=89419717339
-NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
-
-# NextAuth
-AUTH_SECRET=your_auth_secret_here
-AUTH_URL=http://localhost:3000
-```
-
-### 4. Inicializar base de datos (temporalmente deshabilitada)
-
-> **Nota**: La base de datos está temporalmente fuera de servicio. Una vez restaurada, ejecuta:
-
-```bash
-pnpm prisma db push
-pnpm prisma db seed
-```
-
-### 5. Iniciar el servidor de desarrollo
+### 4. Iniciar el servidor de desarrollo
 
 ```bash
 pnpm dev
@@ -225,20 +112,47 @@ Abre [http://localhost:3000](http://localhost:3000). La raíz redirige según el
 - **Horario abierto** → `/tipo` (inicio del wizard)
 - **Almuerzo o fuera de horario** → `/fuera-horario`
 
-Para probar sin depender del reloj:
+Para probar sin depender del reloj, en `.env.local`:
 
 ```env
 NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
 ```
 
----
+## Variables de entorno
+
+Plantilla con placeholders: [`.env.example`](.env.example).
+
+| Variable | Requerida | Descripción |
+|----------|-----------|-------------|
+| `UPSTASH_REDIS_REST_URL` | Sí* | URL REST de Upstash Redis |
+| `UPSTASH_REDIS_REST_TOKEN` | Sí* | Token REST de Upstash Redis |
+| `KV_REST_API_URL` | Alt. | Alias Vercel KV (en lugar de `UPSTASH_REDIS_REST_URL`) |
+| `KV_REST_API_TOKEN` | Alt. | Alias Vercel KV (en lugar de `UPSTASH_REDIS_REST_TOKEN`) |
+| `PA_CREAR_TURNO_URL` | Sí | Webhook PA: crear turno |
+| `PA_CREAR_AUTOGESTION_URL` | Sí | Webhook PA: autogestión |
+| `PA_CREAR_FUERA_HORARIO_URL` | Sí | Webhook PA: solicitud fuera de horario |
+| `PA_ACTUALIZAR_TURNO_URL` | Sí | Webhook PA: caducar/actualizar turno |
+| `MICROSOFT_AVISOS_FLOW_URL` | Sí | Flujo PA: lectura de avisos (banner) |
+| `MICROSOFT_CATEGORIAS_FLOW_URL` | Sí | Flujo PA: categorías del wizard (fallback) |
+| `REFRESH_SECRET` | Sí | Bearer para `POST /api/*/refresh` |
+| `QSTASH_TOKEN` | Prod. | Cola de turnos (no necesario en `localhost`) |
+| `NEXT_PUBLIC_APP_URL` | Prod. | URL pública de la app (default: `http://localhost:3000`) |
+| `ZOOM_MEETING_ID` | No | ID de reunión Zoom (default en código: `89419717339`) |
+| `NEXT_PUBLIC_MOCK_BUSINESS_HOURS` | Dev. | `open` \| `lunch` \| `after-hours` — solo desarrollo |
+
+\* Redis: basta con el par Upstash **o** el par KV.
+
+Variables de plataforma (no configurar manualmente): `NODE_ENV`, `VERCEL_ENV`.
 
 ## Arquitectura
 
 ### Estructura de directorios
 
+> Detalle ampliado en [`docs/architecture.md`](docs/architecture.md).
+
 ```
 campus360-hub/
+├── proxy.ts                      # Redirecciones por horario (Next.js 16)
 ├── app/                          # App Router de Next.js
 │   ├── layout.tsx                # Layout raíz
 │   ├── page.tsx                  # Redirección según horario
@@ -248,23 +162,25 @@ campus360-hub/
 │   │   ├── layout.tsx            # Shell del formulario
 │   │   ├── tipo/                 # Paso 1: estudiante / aspirante
 │   │   ├── datos/                # Paso 2: datos personales
-│   │   ├── servicio/             # Paso 3: catálogo de servicios
-│   │   ├── detalle/              # Paso 4: texto libre
+│   │   ├── servicio/             # Paso 3: catálogo de categorías
+│   │   ├── detalle/              # Paso 4: requerimiento + texto libre
 │   │   └── resultado/            # Paso 5: turno o autogestión
 │   └── api/                      # Route Handlers
 ├── components/
 │   ├── wizard/                   # Componentes del wizard
-│   ├── ui/                       # shadcn/ui components
+│   ├── ui/                       # Inputs, selects, etc.
 │   └── ...
 ├── contexts/
 │   └── FormContext.tsx           # Estado global del wizard
+├── hooks/                        # Lógica reutilizable del wizard
 ├── lib/
-│   ├── power-automate.ts         # Integración Power Automate
-│   ├── business-hours.ts         # Lógica horario Ecuador
-│   ├── api-utilities.ts          # Rate limit, validación
-│   └── validation.ts             # Validación de formularios
-├── prisma/
-│   └── schema.prisma             # Modelos de datos
+│   ├── schedule-core.ts          # Lógica pura de horarios Ecuador
+│   ├── business-hours.ts         # API cliente de horarios
+│   ├── validation.ts             # Validación de formularios
+│   └── server/                   # Redis, Power Automate, rate limit
+│       ├── schedule-service.ts
+│       ├── power-automate.ts
+│       └── api-utilities.ts
 └── tailwind.config.ts            # Paleta de colores UTPL
 ```
 
@@ -272,23 +188,18 @@ campus360-hub/
 
 ```mermaid
 flowchart TD
-    A["/ (inicio)"] --> B{¿Horario abierto?}
+    A["/ (inicio)"] --> B{¿open o closing-soon?}
     B -->|Sí| C["/tipo"]
     B -->|No| D["/fuera-horario"]
-    D -->|Agendar llamada| E["/tipo?mode=fuera-horario"]
+    D -->|Agendar llamada| E["/tipo?mode=fuera-horario&time=..."]
     C --> F["/datos"]
     F --> G["/servicio"]
-    G --> H{¿Servicio GUIA o TURNO?}
-    H -->|GUIA| I["Modal guía"]
-    I -->|Resuelto| J["/resultado (completed)"]
-    I -->|Necesita asesor| K["Asignar turno"]
-    H -->|TURNO| L["/detalle"]
-    L --> K
-    K --> M["/resultado"]
-    M --> N{Estado}
-    N -->|turno-assigned| O["Número de turno + Zoom"]
-    N -->|fuera-horario| P["Confirmación llamada"]
-    N -->|completed| Q["Autogestión exitosa"]
+    G -->|Selección categoría| H["/detalle"]
+    H -->|Enviar| I{¿Horario open?}
+    I -->|Sí| J["PUT /api/turno → /resultado"]
+    I -->|No o mode=fuera-horario| K["POST /api/fuera-horario → /resultado"]
+    J --> L["turno-assigned + Zoom"]
+    K --> M["Confirmación llamada"]
 ```
 
 ### Horario de atención
@@ -309,29 +220,30 @@ Perfiles:
 
 Para abrir solo fines de semana: habilitar Extendido y mantener Normal activo entre semana. Para un periodo extendido de toda la semana: habilitar Extendido y deshabilitar Normal en Power Apps.
 
-El `middleware.ts` redirige a `/fuera-horario` en `lunch` y `after-hours`. El wizard permite `open` y `closing-soon` (o `?mode=fuera-horario`).
-
----
+`proxy.ts` redirige `/` y bloquea las rutas del wizard en `lunch` y `after-hours` (salvo `?mode=fuera-horario`). El wizard permite `open` y `closing-soon`; `BusinessHoursWatcher` complementa con polling en cliente.
 
 ## Scripts disponibles
 
 | Comando | Descripción |
 |---------|-------------|
-| `pnpm dev` | Servidor de desarrollo (Turbopack) |
+| `pnpm dev` | Servidor de desarrollo |
 | `pnpm build` | Compilación de producción |
 | `pnpm start` | Servidor de producción |
 | `pnpm lint` | ESLint |
-| `pnpm lint:fix` | ESLint con correcciones |
-| `pnpm format` | Prettier |
-| `pnpm prisma` | Prisma CLI |
-
----
+| `pnpm lint:fix` | ESLint con correcciones automáticas |
+| `pnpm format` | Prettier (escribe cambios) |
+| `pnpm format:check` | Prettier (solo verificación) |
+| `pnpm lint:all` | ESLint + Prettier check |
 
 ## API REST
 
-Todas las rutas aplican **rate limiting** (30 req/min por IP) y validación.
+La mayoría de rutas aplican **rate limiting** (30 req/min por IP) y validación. Excepciones sin rate limit: `turno/caducar`, `cerrado`, `qstash-worker`.
 
-### `PUT /api/turno` — Asignar turno
+Documentación detallada por endpoint: [`docs/api/`](docs/api/README.md).
+
+## `PUT /api/turno` — Asignar o reasignar turno
+
+Query param obligatorio: `?action=asignar` (valida horario y campos) o `?action=reasignar` (omite validación de horario).
 
 ```json
 {
@@ -342,38 +254,87 @@ Todas las rutas aplican **rate limiting** (30 req/min por IP) y validación.
   "telefono": "0991234567",
   "servicio": "Matrícula",
   "modalidad": "Presencial",
-  "pais": "Ecuador"
+  "origen": "wizard-servicio",
+  "pais": "Ecuador",
+  "requestId": "optional-uuid",
+  "freeText": "",
+  "prefijoTelefonico": "+593"
 }
 ```
 
-### `POST /api/autogestion` — Registrar autogestión
+**Respuesta 200:**
 
 ```json
 {
+  "success": true,
+  "turnoNumber": "A-042",
+  "zoomLink": "zoommtg://...",
+  "webZoomLink": "https://...",
+  "requestId": "optional-uuid"
+}
+```
+
+**403** si `action=asignar` y el centro está fuera de horario (hora Ecuador). En producción encola el envío a Power Automate vía QStash (`POST /api/qstash-worker`); en localhost llama al webhook directamente.
+
+## `POST /api/turno/caducar` — Marcar turno caducado
+
+Usado al generar un nuevo turno desde la pantalla de resultado. Actualiza estado en Power Automate si `PA_ACTUALIZAR_TURNO_URL` está configurado.
+
+```json
+{
+  "requestId": "uuid-del-turno",
+  "turno": "A-042",
+  "nuevoEstado": "CADUCADO",
+  "fechaCaducidad": "2026-07-06T21:00:00.000Z"
+}
+```
+
+**Respuesta:** `{ "success": true, "message": "Turno marcado como caducado" }`
+
+## `POST /api/qstash-worker` — Worker interno QStash
+
+No llamar desde el cliente. Upstash QStash invoca esta ruta al procesar la cola `turnos` y reenvía el payload a Power Automate (`WEBHOOK_URLS.crearTurno`). Requiere `QSTASH_TOKEN` en el servidor que encola.
+
+## `POST /api/autogestion` — Registrar autogestión
+
+```json
+{
+  "fecha": "06/07/2026, 10:30:00",
   "nombres": "María López",
   "cedula": "1234567890",
   "email": "maria@ejemplo.com",
+  "telefono": "0991234567",
   "servicio": "Horarios de clases",
   "resultado": "ÉXITO",
-  "pais": "Ecuador"
+  "pais": "Ecuador",
+  "modalidad": "-",
+  "requestId": "optional-uuid"
 }
 ```
 
-### `POST /api/fuera-horario` — Solicitar llamada
+**Respuesta:** `{ "success": true, "message": "Autogestión guardada" }`
+
+## `POST /api/fuera-horario` — Solicitar llamada
 
 ```json
 {
+  "fecha": "06/07/2026, 10:30:00",
   "horaContactoPreferida": "09:00 - 10:00",
   "nombres": "Carlos Ruiz",
   "cedula": "1234567890",
   "email": "carlos@ejemplo.com",
   "telefono": "0991234567",
   "servicio": "Información General",
-  "pais": "Ecuador"
+  "origen": "fuera-horario",
+  "pais": "Ecuador",
+  "modalidad": "-",
+  "freeText": ""
 }
 ```
 
-### `GET /api/avisos` — Avisos del banner en `/tipo`
+**Respuesta:** `{ "success": true, "message": "Solicitud fuera de horario guardada" }`
+
+## `GET /api/avisos` — Avisos del banner en `/tipo`
 
 Devuelve mensajes activos desde SharePoint (vía Power Automate), con caché compartida en Redis.
 
@@ -395,7 +356,7 @@ Devuelve mensajes activos desde SharePoint (vía Power Automate), con caché com
 
 Si no hay avisos activos o falla la integración, `messages` es un array vacío y el banner no se muestra.
 
-### `POST /api/avisos/refresh` — Sincronizar avisos desde Power Automate
+## `POST /api/avisos/refresh` — Sincronizar avisos desde Power Automate
 
 Actualiza Redis al crear o modificar items en SharePoint (`Bannerconfig`). Requiere autenticación Bearer.
 
@@ -414,7 +375,7 @@ Authorization: Bearer <REFRESH_SECRET>
 { "success": true, "count": 2 }
 ```
 
-### `GET /api/categorias` — Categorías del wizard en `/servicio`
+## `GET /api/categorias` — Categorías del wizard en `/servicio`
 
 Query param obligatorio: `audience=continuo` (Ya soy UTPL +) o `audience=nuevo` (Quiero ser UTPL +).
 
@@ -434,7 +395,7 @@ Query param obligatorio: `audience=continuo` (Ya soy UTPL +) o `audience=nuevo` 
 
 Si Redis no tiene datos, se usa `MICROSOFT_CATEGORIAS_FLOW_URL` como fallback (TTL 10 min). Si todo falla, `categories` es `[]`.
 
-### `POST /api/categorias/refresh` — Sincronizar categorías desde Power Automate
+## `POST /api/categorias/refresh` — Sincronizar categorías desde Power Automate
 
 Igual que avisos: Bearer `REFRESH_SECRET`, body = array de la lista SharePoint `CategoriasWizard`.
 
@@ -462,7 +423,7 @@ curl -X POST "http://localhost:3000/api/categorias/refresh" \
   -d '[{"Title":"Pagos","Activo":{"Value":"Activado"},"TipoEstudiante":{"Value":"Continuo"},"Icono":{"Value":"Dinero – pagos y becas"}}]'
 ```
 
-### `GET /api/schedule-config` — Configuración de horarios
+## `GET /api/schedule-config` — Configuración de horarios
 
 Devuelve horarios almacenados en Redis y el estado actual (`open`, `closing-soon`, `lunch`, `after-hours`).
 
@@ -480,11 +441,20 @@ Devuelve horarios almacenados en Redis y el estado actual (`open`, `closing-soon
   },
   "resolved": { "hasActiveSchedule": true, "titulo": "Horario Normal" },
   "state": "open",
-  "updatedAt": "2026-06-19T12:00:00.000Z"
+  "updatedAt": "2026-06-19T12:00:00.000Z",
+  "meta": {
+    "source": "kv",
+    "redisEnabled": true,
+    "mockActive": false,
+    "ecuadorTime": "10:30",
+    "isWeekday": true
+  }
 }
 ```
 
-### `POST /api/refresh-config` — Sincronizar horarios desde Power Automate
+`state`: `open` | `closing-soon` | `lunch` | `after-hours`. `meta.source`: `kv` | `empty` | `mock`.
+
+## `POST /api/refresh-config` — Sincronizar horarios desde Power Automate
 
 Upsert de **una fila** por request (trigger de SharePoint `Config-horarios`).
 
@@ -503,6 +473,17 @@ Upsert de **una fila** por request (trigger de SharePoint `Config-horarios`).
 }
 ```
 
+**Respuesta 200:**
+
+```json
+{
+  "success": true,
+  "resolved": { "hasActiveSchedule": true, "titulo": "Horario Normal" },
+  "horarios": { "Horario Normal": { "...": "..." } },
+  "updatedAt": "2026-06-19T12:00:00.000Z"
+}
+```
+
 **Prueba local:**
 
 ```bash
@@ -517,6 +498,14 @@ curl "http://localhost:3000/api/schedule-config"
 **Power Automate:** actualizar Bearer de `campus360-pa-horario-2026` a `REFRESH_SECRET` (mismo que banner/categorías).
 
 En producción, quitar `NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open` para que aplique el horario real.
+
+## `GET /api/cerrado` · `POST /api/cerrado` — Flag de cierre memoria
+
+Estado en memoria del proceso (`cerrado: boolean`). No persiste entre reinicios ni instancias serverless. Sin autenticación ni rate limit.
+
+**GET** → `{ "cerrado": false }`
+
+**POST** body `{ "cerrado": true }` → `{ "cerrado": true }` (400 si no es boolean).
 
 ## Pruebas y calidad de código
 
@@ -535,16 +524,19 @@ pnpm format
 4. Fuera de horario → redirección a `/fuera-horario`
 5. Agendar llamada → wizard con `?mode=fuera-horario`
 
----
-
 ## Despliegue
 
-### Vercel (recomendado)
+**URL de producción:** https://campus360-hub-eight.vercel.app
+
+Guía operativa: [docs/deployment.md](docs/deployment.md).
+
+### Vercel recomendado
 
 1. Importa el repositorio en [vercel.com](https://vercel.com)
 2. Framework preset: **Next.js**
-3. Añade variables de entorno
-4. Despliega
+3. Node.js version: **22.x**
+4. Añade variables de entorno (ver [docs/deployment.md](docs/deployment.md))
+5. Despliega
 
 ### Build local
 
@@ -553,33 +545,15 @@ pnpm build
 pnpm start
 ```
 
----
-
 ## Solución de problemas
 
-### Error de conexión a base de datos
+Guía ampliada con 13+ escenarios: [docs/troubleshooting.md](docs/troubleshooting.md).
 
-**Causa:** `DATABASE_URL` no configurada o Neon fuera de servicio.
+Problemas frecuentes en desarrollo:
 
-**Solución:** Verifica `.env.local` yreinicia `pnpm dev`.
-
-### Rate limit excedido (429)
-
-**Causa:** Más de 30 peticiones/minuto desde la misma IP.
-
-**Solución:** Espera un minuto o ajusta en `lib/api-utilities.ts`.
-
-### Wizard redirige siempre a `/fuera-horario`
-
-**Causa:** Fuera de horario o `NEXT_PUBLIC_MOCK_BUSINESS_HOURS` no está en `open`.
-
-**Solución:**
-
-```env
-NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
-```
-
----
+- **Redis vacío** — configura credenciales y ejecuta endpoints `*/refresh`
+- **429 rate limit** — espera 60 s o reduce frecuencia de peticiones
+- **Redirección a `/fuera-horario`** — usa `NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open` en local
 
 ## Contribuir
 
@@ -588,8 +562,6 @@ NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
 3. Asegúrate de que `pnpm lint` pase
 4. Abre un Pull Request
 
----
-
 ## Licencia
 
 Proyecto privado de la UTPL. Consulta con el equipo propietario antes de redistribuir.
@@ -597,3 +569,4 @@ Proyecto privado de la UTPL. Consulta con el equipo propietario antes de redistr
 ---
 
 **Universidad Técnica Particular de Loja** — *decide ser +*
+

@@ -1,0 +1,32 @@
+{
+  "$schema": "./schemas/doc-config.schema.json",
+  "version": "1.0",
+  "spec": "typescript",
+  "output": {
+    "format": "markdown",
+    "filename": "README.md"
+  },
+  "packages": [],
+  "root": {
+    "output": "README.md",
+    "sections": [
+      { "type": "static", "file": "../../docs/intro.md" },
+      { "type": "static", "file": "../../docs/toc.md" },
+      { "type": "static", "file": "../../docs/features.md" },
+      { "type": "static", "file": "../../docs/stack-brief.md" },
+      { "type": "static", "file": "../../docs/prerequisites-brief.md" },
+      { "type": "static", "file": "../../docs/tech-index.md" },
+      { "type": "static", "file": "../../docs/getting-started-brief.md" },
+      { "type": "static", "file": "../../docs/env-vars.md" },
+      { "type": "static", "file": "../../docs/architecture-brief.md" },
+      { "type": "static", "file": "../../docs/scripts.md" },
+      { "type": "static", "file": "../../docs/api/overview.md" },
+      { "type": "static", "file": "../../docs/api-rest.md" },
+      { "type": "static", "file": "../../docs/testing.md" },
+      { "type": "static", "file": "../../docs/deployment.md" },
+      { "type": "static", "file": "../../docs/troubleshooting.md" },
+      { "type": "static", "file": "../../docs/contributing.md" },
+      { "type": "static", "file": "../../docs/license.md" }
+    ]
+  }
+}

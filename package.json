@@ -13,7 +13,10 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:all": "eslint . && prettier --check ."
+    "lint:all": "eslint . && prettier --check .",
+    "docs:readme": "indexion doc readme --config=.indexion/readme/doc.json",
+    "docs:drift": "cp README.md /tmp/README.before.md && indexion doc readme --config=.indexion/readme/doc.json && indexion plan drift --vocab-threshold=0.05 /tmp/README.before.md README.md",
+    "docs:check": "cp README.md /tmp/README.committed.md && indexion doc readme --config=.indexion/readme/doc.json && diff -q /tmp/README.committed.md README.md"
   },
   "dependencies": {
     "@upstash/qstash": "^2.11.1",

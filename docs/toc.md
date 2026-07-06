@@ -1,0 +1,15 @@
+## Tabla de contenidos
+
+- [Características principales](#características-principales)
+- [Stack tecnológico](#stack-tecnológico)
+- [Requisitos previos](#requisitos-previos)
+- [Documentación técnica](#documentación-técnica)
+- [Primeros pasos](#primeros-pasos)
+- [Variables de entorno](#variables-de-entorno)
+- [Arquitectura](#arquitectura)
+- [Scripts disponibles](#scripts-disponibles)
+- [API REST](#api-rest)
+- [Pruebas y calidad de código](#pruebas-y-calidad-de-código)
+- [Despliegue](#despliegue)
+- [Solución de problemas](#solución-de-problemas)
+- [Contribuir](#contribuir)

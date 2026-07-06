@@ -1,0 +1,32 @@
+name: Docs README
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.indexion/**'
+      - '.indexion.toml'
+      - 'README.md'
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - '.indexion/**'
+      - '.indexion.toml'
+
+jobs:
+  readme-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install indexion
+        run: curl -fsSL https://raw.githubusercontent.com/trkbt10/indexion/main/install.sh | bash
+
+      - name: Verify README matches docs assembly
+        run: |
+          export PATH="$HOME/.indexion/bin:$PATH"
+          cp README.md /tmp/README.committed.md
+          indexion doc readme --config=.indexion/readme/doc.json
+          diff -u /tmp/README.committed.md README.md

@@ -1,0 +1,3 @@
+[doc]
+config_path = ".indexion/readme/doc.json"
+per_package = false
