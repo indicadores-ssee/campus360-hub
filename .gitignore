@@ -41,6 +41,7 @@ yarn-error.log*
 !package.json
 !data/utpl-servicios-academicos.json
 !components.json
+!.indexion/readme/doc.json
 
 # vercel
 .vercel
