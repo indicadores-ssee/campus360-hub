@@ -8,6 +8,7 @@ Plataforma web de atención y gestión de turnos para la **Universidad Técnica 
 
 - [Características principales](#características-principales)
 - [Stack tecnológico](#stack-tecnológico)
+- [Arquitectura de datos](#arquitectura-de-datos)
 - [Requisitos previos](#requisitos-previos)
 - [Primeros pasos](#primeros-pasos)
 - [Arquitectura](#arquitectura)
@@ -44,109 +45,44 @@ Plataforma web de atención y gestión de turnos para la **Universidad Técnica 
 | **UI** | React 19, Tailwind CSS 4, Framer Motion 12 |
 | **Iconos** | Lucide React |
 | **Banderas** | react-world-flags |
-| **Base de datos** | Neon PostgreSQL |
-| **Autenticación** | NextAuth.js |
-| **Backend / datos** | Route Handlers de Next.js + Prisma ORM |
-| **Integraciones** | Microsoft Power Automate (turnos, notificaciones, autogestión) |
+| **Datos / caché** | [Upstash Redis](https://upstash.com/docs/redis) |
+| **Cola asíncrona** | [Upstash QStash](https://upstash.com/docs/qstash) |
+| **Backend** | Route Handlers de Next.js |
+| **Integraciones** | Microsoft Power Automate (turnos, notificaciones, autogestión, horarios) |
 | **Videollamadas** | Zoom (enlaces deep link y web) |
-| **Gestor de paquetes** | pnpm |
+| **Gestor de paquetes** | pnpm 9+ |
 | **Linting / formato** | ESLint 9, Prettier 3 |
 | **Despliegue recomendado** | Vercel (plataforma nativa para Next.js) |
 
+Detalle ampliado: [docs/stack.md](docs/stack.md).
+
 ---
 
-## Base de datos servicios UTPL portal servicios
+## Arquitectura de datos
 
-### Relaciones (cardinalidad)
+No hay base de datos relacional ni ORM en el proyecto actual.
 
-- `StudentType` 1:N `ServiceCategory`
-- `ServiceCategory` 1:N `Service`
-- `Service` 1:N `ServiceRequirement`
-- `Service` 1:N `ServiceRequirementTab`
-- `ServiceRequirementTab` 1:N `ServiceRequirementItem`
-- `Service` 1:N `ServicePeriod`
-- `ServicePeriod` 1:N `ServicePeriodModality`
-- `Service` 1:N `ServiceGuide`
-- `Service` 1:N `ServiceExtraField`
+| Dato | Ubicación |
+|------|-----------|
+| **Horarios, avisos, categorías** | SharePoint → Power Automate → caché **Upstash Redis** |
+| **Numeración diaria de turnos** | **Upstash Redis** (`turno:DD/MM/YYYY`, TTL 24 h) |
+| **Registros de atención** | **Power Automate** → backend institucional UTPL |
+| **Envío de turnos en producción** | **QStash** → `/api/qstash-worker` → Power Automate |
 
-### Tablas y campos
+En desarrollo local (`localhost`), los turnos se envían a Power Automate directamente sin QStash.
 
-**Tabla `StudentType`**
-- `id`: integer, PK, autoincrement
-- `code`: string, unique
-- `name`: string
-- `description`: string, nullable
-- `sortOrder`: integer
-- `isActive`: boolean
-- `createdAt`: datetime
-- `updatedAt`: datetime
-
-**Tabla `ServiceCategory`**
-- `id`: integer, PK, autoincrement
-- `studentTypeId`: integer, FK -> `StudentType.id`
-- `slug`: string
-- `name`: string
-- `description`: string, nullable
-- `sortOrder`: integer
-- `isActive`: boolean
-- `createdAt`: datetime
-- `updatedAt`: datetime
-
-**Tabla `Service`**
-- `id`: integer, PK, autoincrement
-- `categoryId`: integer, FK -> `ServiceCategory.id`
-- `sourceKey`: string, unique
-- `title`: string
-- `slug`: string
-- `description`: string, nullable
-- `status`: enum (`draft`, `published`, `needs_review`)
-- `createdAt`: datetime
-- `updatedAt`: datetime
-
-**Tabla `ServiceRequirement`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `text`: string
-- `sortOrder`: integer
-
-**Tabla `ServiceRequirementTab`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `tabName`: string
-- `title`: string, nullable
-- `sortOrder`: integer
-
-**Tabla `ServicePeriod`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `name`: string
-- `sortOrder`: integer
-
-**Tabla `ServicePeriodModality`**
-- `id`: integer, PK, autoincrement
-- `periodId`: integer, FK -> `ServicePeriod.id`
-- `modality`: string
-- `requestWindow`: string, nullable
-- `responseWindow`: string, nullable
-- `enabledFrom`: date, nullable
-- `enabledTo`: date, nullable
-- `sortOrder`: integer
-
-**Tabla `ServiceGuide`**
-- `id`: integer, PK, autoincrement
-- `serviceId`: integer, FK -> `Service.id`
-- `label`: string
-- `url`: string
-- `sortOrder`: integer
+Esquema histórico Prisma/PostgreSQL (ya no en uso): [docs/archive/db-schema.md](docs/archive/db-schema.md).
 
 ---
 
 ## Requisitos previos
 
-- **Node.js** 20 o superior
+- **Node.js** 22.x (ver `engines` en `package.json`)
 - **pnpm** 9+ (recomendado; el proyecto usa `pnpm-lock.yaml`)
-- Una cuenta de **Neon PostgreSQL** (o PostgreSQL compatible)
-- (Opcional) ID de reunión **Zoom** para atención virtual
+- Cuenta **Upstash Redis** (o Vercel KV) y flujos **Power Automate** configurados
+- (Opcional) ID de reunión **Zoom** y token **QStash** para producción
+
+Detalle ampliado: [docs/prerequisites.md](docs/prerequisites.md).
 
 ---
 
@@ -167,55 +103,26 @@ pnpm install
 
 ### 3. Configurar variables de entorno
 
-Crea un archivo `.env.local` en la raíz del proyecto:
+Crea un archivo `.env.local` en la raíz del proyecto con las credenciales de Redis, Power Automate y demás integraciones.
 
-```bash
-cp .env.example .env.local
-```
-
-Variables necesarias:
+**Mínimo para desarrollo local:**
 
 ```env
-# Base de datos PostgreSQL
-DATABASE_URL=postgresql://user:password@host:5432/campus360
-
-# Power Automate webhooks
-PA_CREAR_TURNO_URL=https://prod-xxx.logic.azure.com:443/...
-PA_CREAR_AUTOGESTION_URL=https://prod-xxx.logic.azure.com:443/...
-PA_CREAR_FUERA_HORARIO_URL=https://prod-xxx.logic.azure.com:443/...
-
-# Banner / avisos (SharePoint vía Power Automate)
-MICROSOFT_AVISOS_FLOW_URL=https://prod-xxx.logic.azure.com:443/...
-
-# Categorías del wizard (SharePoint vía Power Automate, lectura fallback)
-MICROSOFT_CATEGORIAS_FLOW_URL=https://prod-xxx.logic.azure.com:443/...
-
-# Secret compartido para POST refresh (banner, categorías y horarios)
-REFRESH_SECRET=your_long_random_secret
-
-# Upstash Redis (turnos + caché de avisos y categorías)
 UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
 UPSTASH_REDIS_REST_TOKEN=xxx
-
-# Zoom
-NEXT_PUBLIC_ZOOM_MEETING_ID=89419717339
+PA_CREAR_TURNO_URL=https://prod-xxx.logic.azure.com/...
+PA_CREAR_AUTOGESTION_URL=https://prod-xxx.logic.azure.com/...
+PA_CREAR_FUERA_HORARIO_URL=https://prod-xxx.logic.azure.com/...
+MICROSOFT_AVISOS_FLOW_URL=https://prod-xxx.logic.azure.com/...
+MICROSOFT_CATEGORIAS_FLOW_URL=https://prod-xxx.logic.azure.com/...
+REFRESH_SECRET=your_long_random_secret
+ZOOM_MEETING_ID=89419717339
 NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
-
-# NextAuth
-AUTH_SECRET=your_auth_secret_here
-AUTH_URL=http://localhost:3000
 ```
 
-### 4. Inicializar base de datos (temporalmente deshabilitada)
+`QSTASH_TOKEN` no es obligatorio en local: en `localhost` los turnos se envían a Power Automate directamente.
 
-> **Nota**: La base de datos está temporalmente fuera de servicio. Una vez restaurada, ejecuta:
-
-```bash
-pnpm prisma db push
-pnpm prisma db seed
-```
-
-### 5. Iniciar el servidor de desarrollo
+### 4. Iniciar el servidor de desarrollo
 
 ```bash
 pnpm dev
@@ -232,6 +139,24 @@ Para probar sin depender del reloj:
 NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
 ```
 
+Guía extendida: [docs/getting-started.md](docs/getting-started.md).
+
+---
+
+## Variables de entorno
+
+Referencia completa: [docs/env-vars.md](docs/env-vars.md).
+
+| Variable | Uso |
+|----------|-----|
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Redis (turnos, horarios, avisos, categorías) |
+| `PA_*` / `MICROSOFT_*` | Webhooks de Power Automate |
+| `REFRESH_SECRET` | Bearer para endpoints `*/refresh` |
+| `QSTASH_TOKEN` | Cola de turnos (producción) |
+| `ZOOM_MEETING_ID` | ID de reunión Zoom |
+| `NEXT_PUBLIC_APP_URL` | URL pública (QStash en producción) |
+| `NEXT_PUBLIC_MOCK_BUSINESS_HOURS` | Solo desarrollo (`open`, `lunch`, `after-hours`) |
+
 ---
 
 ## Arquitectura
@@ -240,56 +165,49 @@ NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
 
 ```
 campus360-hub/
-├── app/                          # App Router de Next.js
+├── proxy.ts                      # Redirecciones por horario
+├── app/
 │   ├── layout.tsx                # Layout raíz
 │   ├── page.tsx                  # Redirección según horario
-│   ├── globals.css               # Estilos globales
+│   ├── globals.css
 │   ├── fuera-horario/            # Pantalla fuera de horario
 │   ├── (form)/                   # Grupo de rutas del wizard
-│   │   ├── layout.tsx            # Shell del formulario
 │   │   ├── tipo/                 # Paso 1: estudiante / aspirante
 │   │   ├── datos/                # Paso 2: datos personales
-│   │   ├── servicio/             # Paso 3: catálogo de servicios
-│   │   ├── detalle/              # Paso 4: texto libre
-│   │   └── resultado/            # Paso 5: turno o autogestión
-│   └── api/                      # Route Handlers
+│   │   ├── servicio/             # Paso 3: categorías (API)
+│   │   ├── detalle/              # Paso 4: detalle del requerimiento
+│   │   └── resultado/            # Paso 5: turno, llamada o autogestión
+│   └── api/                      # Route Handlers REST
 ├── components/
 │   ├── wizard/                   # Componentes del wizard
-│   ├── ui/                       # shadcn/ui components
+│   ├── ui/                       # Input, Select, etc.
 │   └── ...
 ├── contexts/
 │   └── FormContext.tsx           # Estado global del wizard
 ├── lib/
-│   ├── power-automate.ts         # Integración Power Automate
-│   ├── business-hours.ts         # Lógica horario Ecuador
-│   ├── api-utilities.ts          # Rate limit, validación
-│   └── validation.ts             # Validación de formularios
-├── prisma/
-│   └── schema.prisma             # Modelos de datos
-└── tailwind.config.ts            # Paleta de colores UTPL
+│   ├── schedule-core.ts          # Lógica de horarios (Ecuador)
+│   └── server/                   # Redis, Power Automate, QStash, Zoom
+└── tailwind.config.ts
 ```
+
+Detalle ampliado: [docs/architecture.md](docs/architecture.md).
 
 ### Flujo del usuario
 
 ```mermaid
 flowchart TD
-    A["/ (inicio)"] --> B{¿Horario abierto?}
+    A["/ (inicio)"] --> B{¿open o closing-soon?}
     B -->|Sí| C["/tipo"]
     B -->|No| D["/fuera-horario"]
-    D -->|Agendar llamada| E["/tipo?mode=fuera-horario"]
+    D -->|Agendar llamada| E["/tipo?mode=fuera-horario&time=..."]
     C --> F["/datos"]
     F --> G["/servicio"]
-    G --> H{¿Servicio GUIA o TURNO?}
-    H -->|GUIA| I["Modal guía"]
-    I -->|Resuelto| J["/resultado (completed)"]
-    I -->|Necesita asesor| K["Asignar turno"]
-    H -->|TURNO| L["/detalle"]
-    L --> K
-    K --> M["/resultado"]
-    M --> N{Estado}
-    N -->|turno-assigned| O["Número de turno + Zoom"]
-    N -->|fuera-horario| P["Confirmación llamada"]
-    N -->|completed| Q["Autogestión exitosa"]
+    G -->|Selección categoría| H["/detalle"]
+    H -->|Enviar| I{¿Horario open?}
+    I -->|Sí| J["PUT /api/turno → /resultado"]
+    I -->|No o mode=fuera-horario| K["POST /api/fuera-horario → /resultado"]
+    J --> L["Número de turno + Zoom"]
+    K --> M["Confirmación llamada"]
 ```
 
 ### Horario de atención
@@ -310,7 +228,7 @@ Perfiles:
 
 Para abrir solo fines de semana: habilitar Extendido y mantener Normal activo entre semana. Para un periodo extendido de toda la semana: habilitar Extendido y deshabilitar Normal en Power Apps.
 
-El `middleware.ts` redirige a `/fuera-horario` en `lunch` y `after-hours`. El wizard permite `open` y `closing-soon` (o `?mode=fuera-horario`).
+El `proxy.ts` redirige a `/fuera-horario` en `lunch` y `after-hours`. El wizard permite `open` y `closing-soon` (o `?mode=fuera-horario`). En `closing-soon` no se asignan turnos nuevos.
 
 ---
 
@@ -324,200 +242,18 @@ El `middleware.ts` redirige a `/fuera-horario` en `lunch` y `after-hours`. El wi
 | `pnpm lint` | ESLint |
 | `pnpm lint:fix` | ESLint con correcciones |
 | `pnpm format` | Prettier |
-| `pnpm prisma` | Prisma CLI |
+| `pnpm format:check` | Prettier (solo verificación) |
+| `pnpm lint:all` | ESLint + Prettier check |
 
 ---
 
 ## API REST
 
-Todas las rutas aplican **rate limiting** (30 req/min por IP) y validación.
+Todas las rutas aplican **rate limiting** (30 req/min por IP) y validación. Excepciones sin rate limit: `turno/caducar`, `cerrado`, `qstash-worker`.
 
-### `PUT /api/turno` — Asignar turno
+Documentación detallada por endpoint: [`docs/api/`](docs/api/README.md). Visión general: [docs/api/overview.md](docs/api/overview.md).
 
-```json
-{
-  "nombres": "Juan",
-  "apellidos": "Pérez",
-  "cedula": "1234567890",
-  "email": "juan@ejemplo.com",
-  "telefono": "0991234567",
-  "servicio": "Matrícula",
-  "modalidad": "Presencial",
-  "pais": "Ecuador"
-}
-```
-
-### `POST /api/autogestion` — Registrar autogestión
-
-```json
-{
-  "nombres": "María López",
-  "cedula": "1234567890",
-  "email": "maria@ejemplo.com",
-  "servicio": "Horarios de clases",
-  "resultado": "ÉXITO",
-  "pais": "Ecuador"
-}
-```
-
-### `POST /api/fuera-horario` — Solicitar llamada
-
-```json
-{
-  "horaContactoPreferida": "09:00 - 10:00",
-  "nombres": "Carlos Ruiz",
-  "cedula": "1234567890",
-  "email": "carlos@ejemplo.com",
-  "telefono": "0991234567",
-  "servicio": "Información General",
-  "pais": "Ecuador"
-}
-```
-
-### `GET /api/avisos` — Avisos del banner en `/tipo`
-
-Devuelve mensajes activos desde SharePoint (vía Power Automate), con caché compartida en Redis.
-
-```json
-{
-  "messages": [
-    {
-      "title": "Renueva tu beca.",
-      "message": "Renueva tu beca desde el 23 de abril al 3 de mayo.",
-      "link": {
-        "label": "ingresa aquí",
-        "url": "https://becas.utpl.edu.ec/"
-      }
-    }
-  ],
-  "rotationIntervalMs": 20000
-}
-```
-
-Si no hay avisos activos o falla la integración, `messages` es un array vacío y el banner no se muestra.
-
-### `POST /api/avisos/refresh` — Sincronizar avisos desde Power Automate
-
-Actualiza Redis al crear o modificar items en SharePoint (`Bannerconfig`). Requiere autenticación Bearer.
-
-**Headers:**
-
-```
-Content-Type: application/json
-Authorization: Bearer <REFRESH_SECRET>
-```
-
-**Body:** array JSON con el mismo shape que devuelve el flujo de lectura de SharePoint (`body('Obtener_elementos')?['value']`).
-
-**Respuesta:**
-
-```json
-{ "success": true, "count": 2 }
-```
-
-### `GET /api/categorias` — Categorías del wizard en `/servicio`
-
-Query param obligatorio: `audience=continuo` (Ya soy UTPL +) o `audience=nuevo` (Quiero ser UTPL +).
-
-```json
-{
-  "categories": [
-    {
-      "id": "matriculas-y-tramites",
-      "title": "Matrículas y trámites",
-      "description": "Renovación, inscripción y procesos administrativos",
-      "iconLabel": "Libro – matrículas y trámites",
-      "studentType": "continuo"
-    }
-  ]
-}
-```
-
-Si Redis no tiene datos, se usa `MICROSOFT_CATEGORIAS_FLOW_URL` como fallback (TTL 10 min). Si todo falla, `categories` es `[]`.
-
-### `POST /api/categorias/refresh` — Sincronizar categorías desde Power Automate
-
-Igual que avisos: Bearer `REFRESH_SECRET`, body = array de la lista SharePoint `CategoriasWizard`.
-
-**Flujo Power Automate (sync):**
-
-1. Disparador: *Cuando se crea o modifica un elemento* en `Bannerconfig` o `CategoriasWizard`.
-2. Acción: *Obtener elementos* de la misma lista.
-3. Acción HTTP POST a `https://<dominio>/api/avisos/refresh` o `/api/categorias/refresh` con los headers anteriores y body `body('Obtener_elementos')?['value']`.
-
-Los cambios son visibles en segundos tras el POST refresh y una recarga de página (GET lee Redis).
-
-**Pruebas locales:**
-
-```bash
-curl -X POST "http://localhost:3000/api/avisos/refresh" \
-  -H "Authorization: Bearer $REFRESH_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '[{"Title":"Test","field_1":"Mensaje","activar":{"Value":"Activado"}}]'
-
-curl "http://localhost:3000/api/categorias?audience=continuo"
-
-curl -X POST "http://localhost:3000/api/categorias/refresh" \
-  -H "Authorization: Bearer $REFRESH_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '[{"Title":"Pagos","Activo":{"Value":"Activado"},"TipoEstudiante":{"Value":"Continuo"},"Icono":{"Value":"Dinero – pagos y becas"}}]'
-```
-
-### `GET /api/schedule-config` — Configuración de horarios
-
-Devuelve horarios almacenados en Redis y el estado actual (`open`, `closing-soon`, `lunch`, `after-hours`).
-
-```json
-{
-  "horarios": {
-    "Horario Normal": {
-      "horaAperturaM": "08:00",
-      "horaCierreM": "13:00",
-      "horarioAperturaT": "15:00",
-      "horarioCierreT": "18:00",
-      "modo": "dual",
-      "habilitado": true
-    }
-  },
-  "resolved": { "hasActiveSchedule": true, "titulo": "Horario Normal" },
-  "state": "open",
-  "updatedAt": "2026-06-19T12:00:00.000Z"
-}
-```
-
-### `POST /api/refresh-config` — Sincronizar horarios desde Power Automate
-
-Upsert de **una fila** por request (trigger de SharePoint `Config-horarios`).
-
-**Headers:** `Content-Type: application/json`, `Authorization: Bearer <REFRESH_SECRET>`
-
-**Body (campos del trigger):**
-
-```json
-{
-  "Titulo": "Horario Normal",
-  "HoraAperturaM": "08:00",
-  "HoraCierreM": "13:00",
-  "HorarioAperturaT": "15:00",
-  "HorarioCierreT": "18:00",
-  "habilitado": "Si"
-}
-```
-
-**Prueba local:**
-
-```bash
-curl -X POST "http://localhost:3000/api/refresh-config" \
-  -H "Authorization: Bearer $REFRESH_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"Titulo":"Horario Normal","HoraAperturaM":"08:00","HoraCierreM":"13:00","HorarioAperturaT":"15:00","HorarioCierreT":"18:00","habilitado":"Si"}'
-
-curl "http://localhost:3000/api/schedule-config"
-```
-
-**Power Automate:** actualizar Bearer de `campus360-pa-horario-2026` a `REFRESH_SECRET` (mismo que banner/categorías).
-
-En producción, quitar `NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open` para que aplique el horario real.
+---
 
 ## Pruebas y calidad de código
 
@@ -530,22 +266,27 @@ pnpm format
 
 ### Verificación manual
 
-1. Flujo completo **estudiante** con servicio `GUIA`
-2. Flujo **estudiante** con servicio `TURNO` → número + enlace Zoom
-3. Flujo **aspirante** (menos pasos)
-4. Fuera de horario → redirección a `/fuera-horario`
-5. Agendar llamada → wizard con `?mode=fuera-horario`
+1. Flujo completo **estudiante** → categoría → detalle → turno asignado + enlace Zoom
+2. Flujo **aspirante** (5 pasos)
+3. Fuera de horario → redirección a `/fuera-horario`
+4. Agendar llamada → wizard con `?mode=fuera-horario`
+5. Banner de avisos visible en `/tipo` (requiere sync Redis)
 
 ---
 
 ## Despliegue
 
+**URL de producción:** https://campus360-hub-eight.vercel.app
+
+Guía operativa: [docs/deployment.md](docs/deployment.md).
+
 ### Vercel (recomendado)
 
 1. Importa el repositorio en [vercel.com](https://vercel.com)
 2. Framework preset: **Next.js**
-3. Añade variables de entorno
-4. Despliega
+3. Node.js version: **22.x**
+4. Añade variables de entorno (ver [docs/deployment.md](docs/deployment.md))
+5. Despliega
 
 ### Build local
 
@@ -558,17 +299,19 @@ pnpm start
 
 ## Solución de problemas
 
-### Error de conexión a base de datos
+### Redis no disponible o datos vacíos
 
-**Causa:** `DATABASE_URL` no configurada o Neon fuera de servicio.
+**Causa:** Credenciales de Upstash no configuradas, o caché sin sincronizar desde Power Automate.
 
-**Solución:** Verifica `.env.local` yreinicia `pnpm dev`.
+**Solución:** Verifica `.env.local`, ejecuta los endpoints `*/refresh` con `REFRESH_SECRET` y reinicia `pnpm dev`.
+
+Guía ampliada: [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ### Rate limit excedido (429)
 
 **Causa:** Más de 30 peticiones/minuto desde la misma IP.
 
-**Solución:** Espera un minuto o ajusta en `lib/api-utilities.ts`.
+**Solución:** Espera un minuto o ajusta en `lib/server/api-utilities.ts`.
 
 ### Wizard redirige siempre a `/fuera-horario`
 
