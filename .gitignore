@@ -42,6 +42,11 @@ yarn-error.log*
 !data/utpl-servicios-academicos.json
 !components.json
 
+# indexion — generación local de README (no subir al repo)
+.indexion/
+.indexion.toml
+.github/workflows/docs-readme.yml
+
 # vercel
 .vercel
 
