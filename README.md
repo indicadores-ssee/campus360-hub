@@ -17,6 +17,7 @@ Plataforma web de atención y gestión de turnos para la **Universidad Técnica 
 - [Pruebas y calidad de código](#pruebas-y-calidad-de-código)
 - [Despliegue](#despliegue)
 - [Solución de problemas](#solución-de-problemas)
+- [Documentación técnica](#documentación-técnica)
 - [Contribuir](#contribuir)
 
 ---
@@ -578,6 +579,21 @@ pnpm start
 ```env
 NEXT_PUBLIC_MOCK_BUSINESS_HOURS=open
 ```
+
+---
+
+## Documentación técnica
+
+Documentación ampliada en la carpeta [`docs/`](docs/tech-index.md):
+
+| Documento | Para quién |
+|-----------|------------|
+| [informe-tecnico-canal-virtual.md](docs/informe-tecnico-canal-virtual.md) | UTPL — informe institucional (plataforma, alojamiento, URL) |
+| [architecture.md](docs/architecture.md) | Desarrolladores — estructura y flujos |
+| [api/](docs/api/README.md) | Desarrolladores — referencia REST |
+| [troubleshooting.md](docs/troubleshooting.md) | Soporte — guía ampliada de problemas |
+
+Índice completo: [docs/tech-index.md](docs/tech-index.md).
 
 ---
 
