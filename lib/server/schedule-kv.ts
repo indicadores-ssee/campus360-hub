@@ -20,7 +20,12 @@ export async function writeScheduleToKv(
   const redis = getRedis();
   if (!redis) return;
 
-  await redis.set(SCHEDULE_KV_KEY, store, getRedisSetOptions(mode));
+  const options = getRedisSetOptions(mode);
+  if (options) {
+    await redis.set(SCHEDULE_KV_KEY, store, options);
+  } else {
+    await redis.set(SCHEDULE_KV_KEY, store);
+  }
 }
 
 export function isScheduleKvEnabled(): boolean {
