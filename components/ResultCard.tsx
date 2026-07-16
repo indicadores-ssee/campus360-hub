@@ -153,6 +153,7 @@ function TurnoResult({
   const [isExpired, setIsExpired] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasExpiredRef = useRef(false);
 
   const isMobile = useMemo(
     () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent),
@@ -163,6 +164,7 @@ function TurnoResult({
   useEffect(() => {
     if (data.turnoUsed || !data.turnoAssignedAt) return;
 
+    hasExpiredRef.current = false;
     const assignedAt = new Date(data.turnoAssignedAt).getTime();
     const now = Date.now();
     const elapsed = now - assignedAt;
@@ -179,13 +181,29 @@ function TurnoResult({
       if (remaining2 <= 0) {
         if (timerRef.current) clearInterval(timerRef.current);
         setIsExpired(true);
+
+        if (data.turnoRequestId && data.turnoNumber && !hasExpiredRef.current) {
+          hasExpiredRef.current = true;
+          fetch('/api/turno/caducar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requestId: data.turnoRequestId,
+              turno: data.turnoNumber,
+              nuevoEstado: 'CADUCADO',
+              fechaCaducidad: new Date().toISOString(),
+            }),
+          }).catch((error) => {
+            console.warn('Error marcando turno como caducado automáticamente:', error);
+          });
+        }
       }
     }, 1000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [data.turnoAssignedAt, data.turnoUsed]);
+  }, [data.turnoAssignedAt, data.turnoUsed, data.turnoRequestId, data.turnoNumber]);
 
   const handleJoinZoom = useCallback(() => {
     dispatch({ type: 'SET_TURNO_USED', used: true });
@@ -205,8 +223,9 @@ function TurnoResult({
     if (isGenerating || data.turnoAttempts >= 3) return;
     setIsGenerating(true);
 
-    // 1. Marcar como CADUCADO en Power Automate (si hay URL configurada)
-    if (data.turnoRequestId && data.turnoNumber) {
+    // 1. Marcar como CADUCADO en Power Automate (si hay URL configurada y no se caducó automáticamente)
+    if (data.turnoRequestId && data.turnoNumber && !hasExpiredRef.current) {
+      hasExpiredRef.current = true;
       try {
         await fetch('/api/turno/caducar', {
           method: 'POST',
