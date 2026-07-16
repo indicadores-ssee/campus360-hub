@@ -40,6 +40,8 @@ export function useTurnAssignment(): UseTurnAssignmentReturn {
       setIsSubmitting(true);
       setSubmitError(null);
 
+      const modalidad = data.userType === 'aspirante' ? 'ASPIRANTE' : data.modalidad;
+
       const result = await assignTurnoAtomic(
         data.nombres,
         data.apellidos,
@@ -48,7 +50,7 @@ export function useTurnAssignment(): UseTurnAssignmentReturn {
         data.telefono,
         serviceLabel,
         data.freeText,
-        data.modalidad,
+        modalidad,
         origen,
         data.pais,
         data.prefijoTelefonico
@@ -74,6 +76,8 @@ export function useTurnAssignment(): UseTurnAssignmentReturn {
       setIsSubmitting(true);
       setSubmitError(null);
 
+      const modalidad = data.userType === 'aspirante' ? 'ASPIRANTE' : data.modalidad;
+
       const result = await submitFueraHorario(
         data.nombres,
         data.apellidos,
@@ -82,7 +86,7 @@ export function useTurnAssignment(): UseTurnAssignmentReturn {
         data.telefono,
         serviceLabel,
         data.freeText,
-        data.modalidad,
+        modalidad,
         origen,
         preSelectedContactTime,
         data.pais,

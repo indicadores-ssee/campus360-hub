@@ -247,6 +247,8 @@ function TurnoResult({
 
     // 3. Generar nuevo turno
     try {
+      const modalidad = data.userType === 'aspirante' ? 'ASPIRANTE' : data.modalidad;
+
       const response = await fetch('/api/turno?action=reasignar', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -259,7 +261,7 @@ function TurnoResult({
           telefono: data.telefono,
           servicio: data.selectedCategoryTitle || 'Consulta general',
           freeText: data.freeText,
-          modalidad: data.modalidad,
+          modalidad,
           origen: 'TURNO',
           pais: data.pais,
           prefijoTelefonico: data.prefijoTelefonico,
