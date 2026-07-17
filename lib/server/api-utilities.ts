@@ -88,33 +88,35 @@ function validatePassport(id: string): boolean {
 }
 
 export function validateIdentification(id: string): string | null {
-  if (!id || id.trim().length === 0) {
-    return 'La identificación es requerida';
-  }
+  // ponytail: validador comentado, acepta cualquier valor
+  // if (!id || id.trim().length === 0) {
+  //   return 'La identificación es requerida';
+  // }
 
-  const cleaned = id.trim();
+  // const cleaned = id.trim();
 
-  if (/^\d+$/.test(cleaned)) {
-    if (cleaned.length === 10) {
-      if (!validateEcuadorianCedula(cleaned)) {
-        return 'Cédula inválida (dígito verificador incorrecto)';
-      }
-      return null;
-    }
-    if (cleaned.length === 13) {
-      if (!validateEcuadorianRuc(cleaned)) {
-        return 'RUC inválido';
-      }
-      return null;
-    }
-    return 'Identificación debe tener 10 dígitos (cédula) o 13 dígitos (RUC)';
-  }
+  // if (/^\d+$/.test(cleaned)) {
+  //   if (cleaned.length === 10) {
+  //     if (!validateEcuadorianCedula(cleaned)) {
+  //       return 'Cédula inválida (dígito verificador incorrecto)';
+  //     }
+  //     return null;
+  //   }
+  //   if (cleaned.length === 13) {
+  //     if (!validateEcuadorianRuc(cleaned)) {
+  //       return 'RUC inválido';
+  //     }
+  //     return null;
+  //   }
+  //   return 'Identificación debe tener 10 dígitos (cédula) o 13 dígitos (RUC)';
+  // }
 
-  if (validatePassport(cleaned)) {
-    return null;
-  }
+  // if (validatePassport(cleaned)) {
+  //   return null;
+  // }
 
-  return 'Identificación inválida (use cédula, RUC o pasaporte)';
+  // return 'Identificación inválida (use cédula, RUC o pasaporte)';
+  return null;
 }
 
 export function validatePhone(phone: string, expectedDigits?: number[]): string | null {
