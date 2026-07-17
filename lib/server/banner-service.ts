@@ -43,7 +43,7 @@ export async function getActiveBanners(): Promise<BannerAnnouncement[]> {
 
   try {
     const messages = await fetchBannersFromPowerAutomate();
-    await writeBannersToKv(messages, 'fallback');
+    await writeBannersToKv(messages, 'refresh');
     return messages;
   } catch (error) {
     console.error('[banner-service] Failed to fetch banners:', error);

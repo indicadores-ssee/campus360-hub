@@ -45,7 +45,7 @@ async function getAllCategories(): Promise<WizardCategory[]> {
 
   try {
     const categories = await fetchCategoriesFromPowerAutomate();
-    await writeCategoriesToKv(categories, 'fallback');
+    await writeCategoriesToKv(categories, 'refresh');
     return categories;
   } catch (error) {
     console.error('[category-service] Failed to fetch categories:', error);
